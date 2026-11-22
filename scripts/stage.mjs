@@ -29,13 +29,17 @@ if (!SRC) {
   process.exit(2);
 }
 
-const found = [];
+const found = [], skipped = [];
 const walk = async (dir, pre = '') => {
   for (const e of await fsp.readdir(dir, { withFileTypes: true })) {
     const rel = pre ? `${pre}/${e.name}` : e.name;
     const full = path.join(dir, e.name);
     if (e.isDirectory()) { if (e.name !== '.git' && e.name !== 'node_modules') await walk(full, rel); }
-    else if (/\.(md|csv|txt)$/.test(e.name)) found.push([rel, await fsp.readFile(full)]);
+    else if (/\.(md|csv|txt)$/.test(e.name)) {
+      // scorer material stays out of the world (see server.mjs for why)
+      if (/(^|[\/])(policy|taxonomy|scenarios|ground_truth_labels|00_README|README)(\.[a-z]+)?$/i.test(rel)) skipped.push(rel);
+      else found.push([rel, await fsp.readFile(full)]);
+    }
   }
 };
 await walk(SRC);
@@ -54,6 +58,7 @@ for (const [rel, buf] of good) {
   catch (e) { console.log(`    ✘ ${rel}: ${e.message} ${e.detail || ''}`); }
 }
 console.log(`  done: ${done}/${good.length} files, ${bytes} bytes recorded in world.json`);
+if (skipped.length) console.log(`  withheld ${skipped.length} scorer file(s), never part of the world: ${skipped.join(', ')}`);
 if (skip.length) console.log(`  skipped ${skip.length} path(s) that break the world's rules: ${skip.slice(0,3).join(', ')}`)
 console.log();
 process.exit(done === good.length ? 0 : 1);

@@ -8,9 +8,14 @@ a directory rather than reading a log line I wrote about myself.
 Run it (Node 20+, zero dependencies, no install):
 
 ```
-npm start          # http://localhost:3000   ·  world/ created on first run
-npm test           # 30 assertions, checked against the filesystem
+npm start          # http://localhost:3000 · creates ./world on first run
+npm test           # 30 assertions; boots its own server and a throwaway world
+npm run reset      # delete the world and start clean
 ```
+
+`npm test` needs nothing running and leaves nothing behind: it imports the server
+in-process, takes an ephemeral port and a temp world, then tears both down. Point it at a
+real world with `WORLD_ROOT=/path npm test` when you want to inspect what a demo left.
 
 ## What is real here
 
@@ -27,7 +32,11 @@ Everything else — the world, the journal, refusals — is the substrate the ga
 `delete_file path,reason` | the file is **gone from `docs/`**; only a wrapper JSON survives in `trash/` — origin, actor, reason, sha, previous content |
 
 Nothing else is needed for the demo, and nothing else is assumed:
-uploads arrive by **streaming** into `docs/` (a large file never becomes one huge string),
+uploads arrive by **streaming** into `docs/` (a large file never becomes one huge string).
+`scripts/stage.mjs` (and the console's stage button) load AvePoint's 27 fixture files as
+if Mei dropped them in — and **withhold the kit's own `policy.*`, `taxonomy.*`,
+`scenarios.*`, `ground_truth_labels.json` and READMEs**, because that material is the
+scorer's, and in the world it would be an answer key inside the thing being graded.
 and `/api/stage?src=…` reads **only** from roots declared at launch via `KAGI_CORPUS`,
 refusing anything else, because that endpoint can otherwise read any file this process can.
 

@@ -46,13 +46,20 @@ const routes = {
         else if (e.isFile() && /\.(md|csv|txt)$/.test(e.name)) found.push([rel, path.join(dir, e.name)]);
       }
     };
+    // The kit ships policy, taxonomy, scenarios and answer keys next to its data. Those
+    // are the scorer's material: letting them into the world would put the answer key
+    // inside the thing being graded, and let a future gate read labels it must derive.
+    const SCORER = /(^|[\/])(policy|taxonomy|scenarios|ground_truth_labels|00_README|README)(\.[a-z]+)?$/i;
     try { await walk(want); } catch (e) { return { error: 'cannot read ' + want + ': ' + e.code }; }
+    const kept = found.filter(([rel]) => !SCORER.test(rel));
+    const withheld = found.filter(([rel]) => SCORER.test(rel)).map(([rel]) => rel);
+    found.length = 0; found.push(...kept);
     let bytes = 0, files = 0; const errs = [];
     for (const [rel, full] of found) {
       try { const r = await placeStream({ rel: 'docs/' + rel, stream: (await import('node:fs')).createReadStream(full), by: 'mei.tan', note: 'staged from ' + path.basename(want) }); bytes += r.bytes; files++; }
       catch (e) { errs.push(`${rel}: ${e.message}`); }
     }
-    return { files, bytes, source: want, refused: errs.slice(0, 6) };
+    return { files, bytes, source: want, withheld_from_world: withheld, refused: errs.slice(0, 6) };
   },
 };
 
@@ -91,5 +98,15 @@ const server = http.createServer(async (req, res) => {
 
 const read = (req) => new Promise((ok, no) => { let s = '', n = 0; req.on('data', (c) => { n += c.length; if (n > 1 << 22) return no(new Error('body too large')); s += c; }); req.on('end', () => ok(s)); req.on('error', no); });
 
-const port = Number(process.env.PORT || 3000);
-server.listen(port, () => console.log(`\n  kagi workstation  ·  http://localhost:${port}\n  world: ${ROOT}\n  mode : ${MODE}${MODE === 'passthrough' ? '  (no gate attached — actions run unchecked)' : ''}\n`));
+export function listen(port = Number(process.env.PORT || 3000)) {
+  return new Promise((res) => server.listen(port, () => {
+    const actual = server.address().port;
+    console.log(`\n  kagi workstation  ·  http://localhost:${actual}\n  world: ${ROOT}\n  mode : ${MODE}${MODE === 'passthrough' ? '  (no gate attached — actions run unchecked)' : ''}\n`);
+    res({ server, port: actual, close: () => new Promise((r) => server.close(r)) });
+  }));
+}
+
+// auto-start only when this file is the program, never when a test imports it
+if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) {
+  listen().catch((e) => { console.error(`  cannot listen: ${e.code || e.message}`); process.exit(1); });
+}

@@ -2,9 +2,17 @@
 //   BASE=http://localhost:3210 WORLD_ROOT=$PWD/world-test node test/e2e.mjs
 import fsp from 'node:fs/promises';
 import path from 'node:path';
+import os from 'node:os';
 
-const ROOT = path.resolve(process.env.WORLD_ROOT || 'world-test');
-const B = process.env.BASE || 'http://localhost:3210';
+// Self-contained: the test owns a throwaway world and an in-process server, so a plain
+// `npm test` cannot silently read a stale world folder or collide with a running app.
+const ROOT = process.env.WORLD_ROOT || await fsp.mkdtemp(path.join(os.tmpdir(), 'kagi-world-'));
+// must be set before the import: world.mjs resolves ROOT from env at module load
+process.env.WORLD_ROOT = ROOT;
+const { listen } = await import('../src/server.mjs');
+const { port, close } = await listen(Number(process.env.TEST_PORT || 0));
+const B = process.env.BASE || `http://127.0.0.1:${port}`;
+const cleanupWorld = !process.env.WORLD_ROOT;
 const call = async (p, o) => { const r = await fetch(B + p, o); return { status: r.status, body: await r.json().catch(() => null) }; };
 const abs = (rel) => path.join(ROOT, rel);
 const has = async (rel) => !!(await fsp.stat(abs(rel)).catch(() => null));
@@ -99,5 +107,7 @@ await t('the mail in state is the one addressed to QuickPrint', st.mail.some((x)
 console.log(`\n  Kagi workstation · verb and safety checks\n  ${''.padEnd(56, '-')}`);
 for (const line of ok) console.log(`   ✔ ${line}`);
 if (bad.length) { console.log(`\n   ✘ ${bad.length} FAILED`); for (const line of bad) console.log(`     ${line}`); }
-console.log(`\n  ${ok.length} passed, ${bad.length} failed\n`);
+await close();
+if (cleanupWorld) await fsp.rm(ROOT, { recursive: true, force: true });
+console.log(`\n  ${ok.length} passed, ${bad.length} failed  (world: ${cleanupWorld ? 'throwaway tmp dir' : ROOT})\n`);
 process.exit(bad.length ? 1 : 0);
