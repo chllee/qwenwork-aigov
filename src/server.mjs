@@ -85,15 +85,15 @@ const server = http.createServer(async (req, res) => {
     try { return send(res, 200, await r(payload, Object.fromEntries(url.searchParams))); } catch (e) { return bad(res, e); }
   }
 
-  if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
+  // A single-page console: any unknown *page* path serves the app, so a preview proxy
+  // or a deep link never dead-ends. Unknown /api paths still answer honestly with a 404.
+  if (url.pathname.startsWith('/api/')) return send(res, 404, { error: 'no such api route', tried: key });
+  if (req.method === 'GET' || req.method === 'HEAD') {
     const f = path.join(UI, 'index.html');
-    if (!existsSync(f)) { res.writeHead(200, { 'content-type': 'text/html' }); return res.end('<h1>Kagi workstation</h1><p>ui/index.html missing</p>'); }
     res.writeHead(200, { 'content-type': 'text/html' });
-    return res.end(readFileSync(f));
+    return res.end(existsSync(f) ? readFileSync(f) : '<h1>Kagi workstation</h1><p>ui/index.html missing</p>');
   }
-  const asset = path.join(UI, 'kagi.css');
-  if (req.method === 'GET' && url.pathname === '/kagi.css' && existsSync(asset)) { res.writeHead(200, { 'content-type': 'text/css' }); return res.end(readFileSync(asset)); }
-  send(res, 404, { error: 'no route', tried: key });
+  send(res, 405, { error: 'method not allowed', tried: key });
 });
 
 const read = (req) => new Promise((ok, no) => { let s = '', n = 0; req.on('data', (c) => { n += c.length; if (n > 1 << 22) return no(new Error('body too large')); s += c; }); req.on('end', () => ok(s)); req.on('error', no); });
