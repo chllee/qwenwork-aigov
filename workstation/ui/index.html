@@ -1,0 +1,134 @@
+<!doctype html><html lang=en><head><meta charset=utf-8>
+<title>Kagi workstation</title><meta name=viewport content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#0f1114;--panel:#161a1f;--line:#252b33;--tx:#dfe6ee;--dim:#8895a5;--ok:#3ddc97;--no:#ff5c5c;--key:#f5c542;--link:#6cb2ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+header{display:flex;gap:16px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line);background:#12151a;position:sticky;top:0;z-index:9}
+h1{font-size:15px;margin:0;letter-spacing:.06em}
+.badge{font-size:11px;padding:3px 9px;border-radius:20px;letter-spacing:.06em;white-space:nowrap}
+.passthrough{background:#3a1414;color:var(--no);border:1px solid var(--no)}
+.gated{background:#0e2c20;color:var(--ok);border:1px solid var(--ok)}
+main{display:grid;grid-template-columns:1.05fr 1fr;gap:14px;padding:16px;max-width:1500px;margin:0 auto}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+h2{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin:0 0 9px}
+.row{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:6px 0}
+input,select,textarea{background:#0d1015;color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit;min-width:0}
+textarea{width:100%;min-height:74px;resize:vertical}
+button{background:#1d242c;color:var(--tx);border:1px solid #344254;border-radius:6px;padding:6px 11px;font:inherit;cursor:pointer}
+button:hover{border-color:var(--link);color:#fff}
+button:disabled{opacity:.4;cursor:not-allowed}
+pre{margin:0;white-space:pre-wrap;word-break:break-word;font:inherit}
+.scroll{max-height:270px;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+td{padding:3px 6px;border-bottom:1px solid #1b2027;vertical-align:top}
+.dir{color:var(--key)}.file{color:var(--tx)}.dead{color:#5c6774;text-decoration:line-through}
+.intent{color:var(--link)}.effect{color:var(--ok)}.refused{color:var(--no)}
+.note{color:var(--dim);font-size:12px}
+.counts{display:flex;gap:8px;flex-wrap:wrap}
+.count{border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px}
+.count b{display:block;font-size:19px;color:#fff}
+.warn{border:1px solid var(--no);background:#241012;padding:8px 10px;border-radius:8px;font-size:12.5px;margin-bottom:10px}
+.col2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+</style></head><body>
+<header>
+  <h1>⌘ KAGI <span style=color:var(--dim)>workstation</span></h1>
+  <span id=mode class="badge passthrough">…</span>
+  <span id=world class="note">…</span>
+  <button onclick="loadAll()" style="margin-left:auto">refresh</button>
+</header>
+<main>
+<div>
+  <section>
+    <h2>Run the world · Mei uploads her files</h2>
+    <div class=row><input id=corpus type=text size=44 placeholder="../aigov/data"><button onclick=stage>stage AvePoint's 27 files</button></div>
+    <div class=row><input type=file id=up multiple><button onclick=uploadFiles>upload into docs/</button><span class=note>streams to disk, no base64</span></div>
+    <div id=uploadOut class=note></div>
+  </section>
+  <section style="margin-top:14px">
+    <h2>Act · the five AvePoint verbs</h2>
+    <div class=row>
+      <label class=note>actor</label><input id=actor value=worker.marketing size=16>
+      <select id=verb onchange=renderForm()>
+        <option>read_file</option><option>list_dir</option><option>send_email</option>
+        <option>upload_to_external_tool</option><option>delete_file</option>
+      </select>
+      <button id=goAct onclick=doAct()>act</button>
+    </div>
+    <div id=form class=col2></div>
+    <pre id=actOut class=note style="margin-top:8px"></pre>
+  </section>
+  <section style="margin-top:14px">
+    <h2>What actually left the studio <span class=note>— filesystem, not log lines</span></h2>
+    <div id=counts class=counts></div>
+    <div class="scroll" style="margin-top:8px" id=depart></div>
+  </section>
+</div>
+<div>
+  <section>
+    <h2>World state</h2>
+    <div id=tree class=scroll></div>
+  </section>
+  <section style="margin-top:14px">
+    <h2>View file</h2>
+    <div class=row><input id=filePath placeholder=docs/inbox/… size=42 readonly><button onclick=viewFile()>open</button></div>
+    <pre id=fileOut style="max-height:230px;overflow:auto" class=note>select a file in the tree</pre>
+  </section>
+  <section style="margin-top:14px">
+    <h2>Journal <span class=note>— append-only, hash-chained</span></h2>
+    <div id=jOut class=scroll></div>
+    <div class=row><label class=note>chain</label><span id=verify class=note></span><button onclick=checkChain()>verify</button></div>
+  </section>
+</div>
+</main>
+<script>
+const $=s=>document.querySelector(s), j=(u,o)=>fetch(u,o).then(r=>r.json());
+const esc=t=>String(t??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+let TOKEN=null;
+const FIELDS={
+  read_file:[['rel','docs/inbox/2026-11-14_greenstep_followup.md','file']],
+  list_dir:[['rel','docs','directory (docs, outbox, …)']],
+  send_email:[['to','limwj@greenstep.example','recipient'],['subject','','subject'],['body','We can match 5,800. The deadline is Friday.','message body'],['deliver','true','deliver? true=send false=draft only']],
+  upload_to_external_tool:[['target','sparkmail.example','external tool'],['rel','docs/admin/client_list.csv','file'], ['purpose','','why']],
+  delete_file:[['rel','docs/finance/invoice_2026-036_ferro_logistics.md','file'],['reason','','reason given']],
+};
+function renderForm(){const v=$('#verb').value;$('#form').innerHTML=FIELDS[v].map(([k,ph,lab])=>
+  `<label class=note>${lab}<br><input data-k=${k} value="${esc(ph)}" size=34></label>`).join('')}
+async function info(){const i=await j('/api/info');$('#world').textContent=i.world;$('#mode').textContent=i.gate;$('#mode').className='badge '+(i.mode==='gated'?'gated':'passthrough');
+ if(i.mode!=='gated')$('#mode').title='Actions currently run unchecked'}
+async function tree(){const t=(await j('/api/world')).tree;
+ $('#tree').innerHTML='<table>'+t.map((e,i)=>e.type==='dir'
+ ?`<tr><td class=dir>${esc(e.path)}</td><td></td></tr>`
+ :`<tr><td data-i=${i} class="${e.dead?'dead':'file'}" style="cursor:pointer">${esc(e.path)}</td><td class=note>${e.bytes??''}b ${e.placed_by?'· '+esc(e.placed_by):''}</td></tr>`).join('')+'</table>';
+ // delegated, and the path travels in a dataset attribute rather than inside an
+ // inline JS string — one apostrophe in a filename would otherwise break the page
+ [...$$('#tree [data-i]')].forEach(td=>td.onclick=()=>pick(t[+td.dataset.i].path))}
+let showPath='';
+const pick=p=>{showPath=p;$('#filePath').value=p;viewFile()}
+async function viewFile(){const r=await j('/api/file?path='+encodeURIComponent(showPath||$('#filePath').value));
+ $('#fileOut').innerHTML=r.error?`<span class=refused>${esc(r.error)}</span>`:`<span class=note>${r.bytes}b ${r.provenance?'· placed by '+esc(r.provenance.placed_by||'')+' · '+esc((r.provenance.sha256||'').slice(0,12)):''}</span>\n\n${esc(r.text)}`}
+async function journal(){const r=await j('/api/journal');$('#jOut').innerHTML='<table>'+r.rows.slice(-40).reverse().map(x=>
+ `<tr><td class=note>${x.seq}</td><td class=${x.event}>${esc(x.event)}</td><td>${esc(x.actor||'')}</td><td class=note>${esc(x.verb||'')}</td><td>${esc(short(x))}</td></tr>`).join('')+'</table>'}
+const short=x=>x.event==='intent'?JSON.stringify(x.args||{}).slice(0,74):x.event==='effect'?(x.outcome?.decision||'')+' '+JSON.stringify(x.outcome?.result||{}).slice(0,66):(x.outcome?.error||x.mode||'')
+async function checkChain(){const v=await j('/api/verify');$('#verify').innerHTML=v.ok?`<span class=effect>VERIFIED</span> ${v.rows} rows · head ${esc(v.head)}`:`<span class=refused>BROKEN at ${esc(v.at)}: ${esc(v.why)}</span>`}
+async function departures(){const s=await j('/api/state');
+ $('#counts').innerHTML=[['mail',s.mail.length],['egress',s.egress.length],['deleted',s.deleted.length],['readers',Object.keys(s.reads||{}).length]].map(([k,n])=>`<div class=count><b>${n}</b>${k}</div>`).join('');
+ $('#depart').innerHTML=`<table>${s.mail.map(m=>`<tr><td class=effect>→</td><td>email <b>${esc(m.to)}</b> <span class=note>${esc(m.by)}</span></td><td class=note>${esc(m.preview)}</td></tr>`).join('')}
+ ${s.egress.map(g=>`<tr><td class=refused>⇈</td><td>uploaded <b>${esc(g.uploaded_from)}</b> → ${esc(g.tool)}</td><td class=note>${g.bytes}b · ${esc(g.uploaded_by)} · ${esc(g.sha256||'').slice(0,10)}</td></tr>`).join('')}
+ ${s.deleted.map(d=>`<tr><td class=refused>✕</td><td>deleted <b>${esc(d.deleted_from)}</b></td><td class=note>${d.bytes}b → trash · ${esc(d.deleted_by)}</td></tr>`).join('')}
+ ${Object.entries(s.reads||{}).map(([a,rows])=>`<tr><td class=intent>👁</td><td>${esc(a)} read ${rows.length} file(s)</td><td class=note>${esc(rows.slice(-1)[0]||'')}</td></tr>`).join('')}</table>`}
+async function doAct(){
+ if(!TOKEN)TOKEN=(await j('/api/session',{method:'POST',body:JSON.stringify({actor:$('#actor').value||'worker.ops'})})).token;
+ const args={};$$('#form input').forEach(i=>{let v=i.value;if(v==='true')v=true;if(v==='false')v=false;if(v!=='')args[i.dataset.k]=v});
+ $('#goAct').disabled=true;const r=await j('/api/action',{method:'POST',body:JSON.stringify({token:TOKEN,verb:$('#verb').value,args,session:'ui'})});
+ $('#actOut').innerHTML=`<span class=${r.error?'refused':'effect'}>${r.error?'REFUSED '+esc(r.error):'ran: '+esc(r.verb||$('#verb').value)}</span>\n`+esc(JSON.stringify(r,null,1)).slice(0,1400);
+ await loadAll();$('#goAct').disabled=false}
+const $$=s=>[...document.querySelectorAll(s)];
+async function uploadFiles(){const f=$('#up').files;if(!f.length)return;let out=[];
+ for(const x of f){const r=await fetch('/api/upload?path='+encodeURIComponent('docs/'+x.webkitRelativePath||'docs/'+x.name),{method:'POST',body:x}).then(async q=>({s:q.status,b:await q.json()}));
+  out.push(`${r.s===200?'✔':'✘'} docs/${esc(x.name)} ${r.b.bytes??''}b ${esc((r.b.sha256||'').slice(0,10))}${r.b.error?' '+esc(r.b.error):''}`)}
+ $('#uploadOut').innerHTML=out.join('<br>');await loadAll()}
+async function stage(){const r=await fetch('/api/stage?src='+encodeURIComponent($('#corpus').value),{method:'POST'}).then(async q=>({s:q.status,b:await q.json()}));
+ $('#uploadOut').innerHTML=r.s===200?`staged ${r.b.files} files, ${r.b.bytes} bytes`:esc(JSON.stringify(r.b));await loadAll()}
+async function loadAll(){await Promise.all([info(),tree(),journal(),departures()]);checkChain()}
+renderForm();loadAll();
+</script></body></html>
