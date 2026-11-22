@@ -34,6 +34,8 @@ button is non-destructive: UPDATE and DELETE are refused for real, and the rewri
 attempt is detected by recomputing the row hash, so the demonstration leaves the ledger
 intact for the next judge.
 
+Full run-of-show, QwenWork MCP wiring and the single-writer caveat that matters on stage: **[docs/RUNNING.md](docs/RUNNING.md)**.
+
 ## What happens on the demo's four moments
 
 | AvePoint's moment | Where it lives | What you see |

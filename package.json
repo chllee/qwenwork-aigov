@@ -17,7 +17,8 @@
     "web": "node src/server.mjs",
     "mcp": "node mcp/server.mjs",
     "reseed": "bash scripts/reseed.sh",
-    "rebrand": "node scripts/rebrand.mjs"
+    "rebrand": "node scripts/rebrand.mjs",
+    "probe": "node mcp/probe.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.11"

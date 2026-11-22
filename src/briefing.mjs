@@ -22,9 +22,11 @@ export async function buildBriefing(db, runId, day = new Date().toISOString().sl
   const push = (who, text) => lines.push({ who, text, severity: 0 });
 
   const nActions = verdicts.length;
+  const pl = (n, w) => `${n} ${w}${Number(n) === 1 ? '' : 's'}`;
+  const were = (n) => `${n} ${Number(n) === 1 ? 'was' : 'were'}`;
   const headline = held.length || blocked.length
-    ? `You gave your agents ${count(human)} jobs. They attempted ${nActions} actions: ${blocked.length} were stopped, ${held.length} are waiting for you.`
-    : `You gave your agents ${count(human)} jobs. They attempted ${nActions} actions. Nothing was stopped, nothing is waiting on you.`;
+    ? `You gave your agents ${pl(count(human), 'job')}. They attempted ${pl(nActions, 'action')}: ${were(blocked.length)} stopped, ${were(held.length)} waiting for you.`
+    : `You gave your agents ${pl(count(human), 'job')}. They attempted ${pl(nActions, 'action')}. Nothing was stopped, and nothing is waiting on you.`;
   push('headline', headline);
 
   const moneyFindings = findings.filter((f) => /floor_breach|delete_unpaid_record|unsupported|contradicted|terms_change|data_egress/.test(String(E(f.payload, 'finding'))));
