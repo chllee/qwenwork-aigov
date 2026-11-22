@@ -108,4 +108,4 @@ const server = http.createServer(async (req, res) => {
   j(res, 404, { error: 'not found' });
 });
 const port = Number(process.env.PORT || 3000);
-server.listen(port, () => console.log(`Lumen oversight console → http://localhost:${port}   (run ${runId}, policy v${policy.version})`));
+server.listen(port, () => console.log(`Kagi console → http://localhost:${port}   (run ${runId}, policy v${policy.version})`));

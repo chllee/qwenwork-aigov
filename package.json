@@ -1,9 +1,9 @@
 {
-  "name": "qwenwork-aigov",
+  "name": "kagi-gate",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "An oversight layer for one-person companies: every agent action is logged, gated and explained to the owner",
+  "description": "Kagi — an oversight layer for one-person companies: every agent action is logged, gated and explained to the owner",
   "engines": {
     "node": ">=22"
   },
@@ -16,7 +16,8 @@
     "demo": "node scripts/demo_all.mjs",
     "web": "node src/server.mjs",
     "mcp": "node mcp/server.mjs",
-    "reseed": "bash scripts/reseed.sh"
+    "reseed": "bash scripts/reseed.sh",
+    "rebrand": "node scripts/rebrand.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.11"

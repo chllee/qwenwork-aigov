@@ -107,7 +107,7 @@ export async function verifyChain(db) {
 /** HMAC attestation of the ledger head, exported after every run. */
 export async function seal(db, outDir = path.join(ROOT, 'attestations')) {
   const rows = (await db.query('select count(*) n, max(hash) h from events')).rows[0];
-  const key = process.env.ATTEST_KEY || 'lumen-demo-key';
+  const key = process.env.ATTEST_KEY || 'kagi-demo-key';
   const body = canonical({ n: Number(rows.n), head: rows.h, at: new Date().toISOString(), run: 'seal' });
   const sig = createHmac('sha256', key).update(body).digest('hex');
   const doc = { ...JSON.parse(body), sig, verify: 'hmac-sha256(ATTEST_KEY, canonical({n,head,at,run}))' };

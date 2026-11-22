@@ -110,7 +110,7 @@ const rl = createInterface({ input: process.stdin });
 rl.on('line', async (line) => {
   let m; try { m = JSON.parse(line); } catch { return; }
   const { id, method, params } = m;
-  if (method === 'initialize') return send({ jsonrpc: '2.0', id, result: { protocolVersion: '2024-11-05', capabilities: { tools: {} }, serverInfo: { name: 'lumen-oversight-gate', version: '1.0.0' } } });
+  if (method === 'initialize') return send({ jsonrpc: '2.0', id, result: { protocolVersion: '2024-11-05', capabilities: { tools: {} }, serverInfo: { name: 'kagi-gate', version: '1.0.0' } } });
   if (method === 'tools/list') return send({ jsonrpc: '2.0', id, result: { tools: TOOLS } });
   if (method === 'ping') return send({ jsonrpc: '2.0', id, result: {} });
   if (method === 'tools/call') {
@@ -123,4 +123,4 @@ rl.on('line', async (line) => {
   }
   if (id !== undefined) send({ jsonrpc: '2.0', id, error: { code: -32601, message: `method ${method} not supported` } });
 });
-process.stderr.write(`lumen oversight gate · mcp stdio · run ${runId} · policy v${policy.version} · ${Object.keys(EXTERNAL_TOOLS).length} known external tools\n`);
+process.stderr.write(`Kagi gate · mcp stdio · run ${runId} · policy v${policy.version} · ${Object.keys(EXTERNAL_TOOLS).length} known external tools\n`);

@@ -1,19 +1,19 @@
 {
-  "runId": "run_202611211729",
+  "runId": "run_202611220551",
   "pts": 15,
   "ownPts": 6,
   "chain": {
     "ok": true,
     "checked": 59,
-    "head": "2c6980088f06c6496145ff143cd5d7fa48398c0d5d06fc993c69140b0df60bbf"
+    "head": "becdabcabb64033e76dabf4001c4498e71676ee8cf152a53dd249b34e7e7c906"
   },
   "manifest": {
-    "file": "/workspace/9f85a107-be06-4109-a8f9-f6324343ff34/work/output/aigov/attestations/ledger-1795282146661.json",
-    "at": "2026-11-21T17:29:06.659Z",
-    "head": "f513c16d97c8e5c681db54788fe43da55bac9258c0209de563e844e5900f1ac2",
+    "file": "/tmp/pullchk/attestations/ledger-1795326706116.json",
+    "at": "2026-11-22T05:51:46.116Z",
+    "head": "fcf34e6c7a449fdeb91f443da51a6efa1e12560ad1d0d24c4f46697080ddae90",
     "n": 59,
     "run": "seal",
-    "sig": "253153a299e89b5d56ab0b74dbea473aa479bfb4ef325910c3f81e3ea3c576a9",
+    "sig": "4c0f767067419ed20cda05f8fe85ad44560069ca89d152943d0d8221db042961",
     "verify": "hmac-sha256(ATTEST_KEY, canonical({n,head,at,run}))"
   },
   "scored": [

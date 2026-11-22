@@ -1,4 +1,4 @@
--- 001_init.sql — Lumen oversight layer
+-- 001_init.sql — Kagi oversight layer
 -- Design rule: the ledger is ONE append-only table with ONE writer.
 -- Every component (human intent, worker intent, verdict, finding, approval, result)
 -- is an event. Nothing else is allowed to be a source of truth.
