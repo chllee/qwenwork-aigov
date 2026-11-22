@@ -1,26 +1,15 @@
 {
-  "name": "kagi-gate",
-  "version": "0.1.0",
+  "name": "kagi-workstation",
   "private": true,
+  "version": "0.1.0",
   "type": "module",
-  "description": "Kagi — an oversight layer for one-person companies: every agent action is logged, gated and explained to the owner",
-  "engines": {
-    "node": ">=22"
-  },
+  "description": "Kagi workstation: a functional one-person-company workspace (real files, real side effects) for the Agents-Watching-Agents track. The policy gate is a seam, not yet attached.",
+  "engines": { "node": ">=20" },
   "scripts": {
-    "migrate": "node scripts/migrate.mjs",
-    "classify": "node scripts/classify_eval.mjs",
-    "mine": "node scripts/mine_obligations.mjs",
-    "scenarios": "node scripts/run_scenarios.mjs",
-    "briefing": "node scripts/briefing.mjs",
-    "demo": "node scripts/demo_all.mjs",
-    "web": "node src/server.mjs",
-    "mcp": "node mcp/server.mjs",
-    "reseed": "bash scripts/reseed.sh",
-    "rebrand": "node scripts/rebrand.mjs",
-    "probe": "node mcp/probe.mjs"
-  },
-  "dependencies": {
-    "@electric-sql/pglite": "^0.3.11"
+    "start": "node src/server.mjs",
+    "dev": "KAGI_CORPUS=../data node src/server.mjs",
+    "gate": "KAGI_MODE=gated node src/server.mjs",
+    "test": "node test/e2e.mjs",
+    "reset": "rm -rf world && node -e \"import('./src/world.mjs').then(m=>m.ensure())\""
   }
 }

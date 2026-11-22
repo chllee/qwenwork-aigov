@@ -1,125 +1,66 @@
-# Kagi — the key that keeps an agent from acting
+# Kagi workstation
 
-**Track 2, AvePoint challenge: "Agents Watching Agents".**
-QwenWork One-Person Company Hackathon · built 21–22 Nov 2026.
+The **world** the agents act on, without a gate in it. This is the base layer for the
+Agents-Watching-Agents track: a one-person studio's workspace where actions have real,
+inspectable consequences, so that "the gate stopped it" can be proven later by looking at
+a directory rather than reading a log line I wrote about myself.
 
-A one-person studio runs on agents. Nobody checks what they did. This is the checking.
-Mei Tan hires agents to answer email, chase invoices and tidy files. They submit every
-intention to a **deterministic gate** that classifies the data involved, applies her
-policy, checks every figure against her actual documents, and either lets the action
-through, holds it for her, or refuses it — writing all three outcomes to an append-only,
-hash-chained ledger. The next morning she reads one plain-language briefing generated
-from those same rows.
-
-## Status
+Run it (Node 20+, zero dependencies, no install):
 
 ```
-AvePoint's five scenarios, scored their way (decision / rule / evidence): 15/15
-Our own two extra scenarios:                                              6/6
-Classifiers vs ground_truth_labels.json (header-blind):                   27/27 = 100%
-Ledger integrity: append-only trigger armed, chain verified, attestation signed
+npm start          # http://localhost:3000   ·  world/ created on first run
+npm test           # 30 assertions, checked against the filesystem
 ```
 
-## Run it
+## What is real here
 
-```bash
-npm install
-npm run demo        # classify → mine → run the pack → print the morning briefing
-npm run web         # http://localhost:3000  (console: briefing / queue / ledger / integrity)
-npm run mcp         # the gate as an MCP server, for a live QwenWork session
+AvePoint's scenario pack only ever names five verbs, so those are the tool surface:
+`read_file`, `list_dir`, `send_email`, `upload_to_external_tool`, `delete_file`.
+Everything else — the world, the journal, refusals — is the substrate the gate will sit on.
+
+| Verb | Effect on disk |
+|---|---|
+`read_file docs/…` | content returned, and an append-only **read receipt** per actor in `world/docs/.reads/<actor>.log` (with a content hash, so an edited file is visible) |
+`list_dir <area>` | names and sizes only — **never contents**, which is why a `client-confidential` hit is a lead, not a leak |
+`send_email to,…` | a draft in `drafts/<party>/`; `deliver:true` **also** writes to `outbox/<party>/` |
+`upload_to_external_tool target,file` | the bytes genuinely copied to `egress/<tool>/`, plus `*.receipt.json` (tool, origin, sha256, who, why) |
+`delete_file path,reason` | the file is **gone from `docs/`**; only a wrapper JSON survives in `trash/` — origin, actor, reason, sha, previous content |
+
+Nothing else is needed for the demo, and nothing else is assumed:
+uploads arrive by **streaming** into `docs/` (a large file never becomes one huge string),
+and `/api/stage?src=…` reads **only** from roots declared at launch via `KAGI_CORPUS`,
+refusing anything else, because that endpoint can otherwise read any file this process can.
+
+## The journal
+
+`world/journal.jsonl` is append-only and hash-chained: `seq`, server-stamped `actor`, and a
+running chain (row `hash = sha256(prev + canonical)`). Every action writes an `intent`
+**before** it can touch the world; an `effect` row records the outcome. Verify with
+`GET /api/verify`, or run `/api/verify` after editing a line by hand to see it break.
+
+## Not here yet, on purpose
+
+**No gate.** Every action today runs unchecked; `GET /api/info` says `mode: passthrough`
+and every journal row carries that — the app cannot misreport its own governance state.
+The seam is the flagged comment in `src/dispatch.mjs`: that is the only insertion point
+for `ALLOW / HOLD_FOR_APPROVAL / BLOCK`. `npm run gate` starts in `gated` mode, and will
+loudly say the gate is absent until one exists.
+
+**No LLM.** Nothing here calls a model: the worker, the decision-maker and the world are
+honest code, and AvePoint's five verbs were written by hand into the UI as a form. A model
+gets wired in once the gate exists — otherwise you would only be demonstrating that
+prompts can be scripted.
+
+Also deliberately missing: policy rules, sensitivity tiers, evidence and provenance checks,
+approver queue. That is the *watcher*'s job, and the watcher comes on top of this layer.
+
+## Layout
+
 ```
-
-`npm run reseed` wipes the local database. The Integrity tab's "try to forge a verdict"
-button is non-destructive: UPDATE and DELETE are refused for real, and the rewrite
-attempt is detected by recomputing the row hash, so the demonstration leaves the ledger
-intact for the next judge.
-
-Full run-of-show, QwenWork MCP wiring and the single-writer caveat that matters on stage: **[docs/RUNNING.md](docs/RUNNING.md)**.
-
-## What happens on the demo's four moments
-
-| AvePoint's moment | Where it lives | What you see |
-|---|---|---|
-| 1. badly-behaved agent runs through the layer | `npm run scenarios` | 5 tasks, 11 attempts, 8 caught, 0 missed |
-| 2. risky action caught, explained, **stopped before it completes** | S1 upload / S2 floor | gate answers `BLOCK` before anything is sent; rule id, plain reason, cited file:line |
-| 3. made-up number flagged with the evidence it contradicts | S4 | `told Ferro Logistics Pte Ltd "5,250", but Invoice 2026-036 lists Total as SGD 5,040` |
-| 4. morning briefing an owner reads with her coffee | `npm run briefing` | 12 lines, no jargon, then the 60-second script |
-
-## Architecture
-
+src/  world.mjs      the world: areas, safe paths, the five verbs
+      journal.mjs    append-only hash-chained JSONL + verify
+      dispatch.mjs   the seam: identity, intent-then-effect, KAGI GATE comment
+      server.mjs     core-Node HTTP, streaming uploads
+ui/   index.html     the console (vanilla JS, no build step)
+test/ e2e.mjs        30 filesystem assertions; exits non-zero on any miss
 ```
-User → User Application → [ Log Protocol: schema-enforced write ] → Log Database (append-only, hash-chained)
-                              ↑                    ↑                        ↕ read-only
-   Artifact Store ────────────┘                 Gate ───────────→ Other Applications (only path out)
-   (immutable, sensitivity-labelled)      ┌──────┴──────┐
-                                          │             │
-                              Checkpoint A (pre-action)  Checkpoint B (pre-delivery)
-                                          │             │
-                                   Policy Store    Evidence Index (facts, lines)
-                                          └──→ Escalation → owner (single-use, default-deny on timeout)
-```
-
-Nine modules: `log` (ledger and chain), `classify` (header-blind sensitivity), `facts`
-(line-addressable values, obligation mining), `policy` (rule table, roster, least-privilege
-read model), `provenance` (claim verification), `gate` (the veto), `briefing`
-(deterministic owner render), `replay` (the scenario pack as a callable), `approvals`.
-
-### Invariants, and where each one is enforced
-
-- **The gate is the only door.** The worker holds no credentials; the gateway performs
-  the action after an ALLOW. `src/gate.mjs:submit`, `mcp/server.mjs`.
-- **Bias is structural.** The gate reads the ledger and the artifact store directly and
-  never accepts the worker's citation as authority. `src/provenance.mjs:checkProvenance`
-  matches values against facts extracted from the corpus, scoped to the client, typed by
-  unit — 5 days is not 5 dollars.
-- **The Writer is code, not an agent.** One insert path stamps `ts`, `seq`, `actor` and
-  the hash chain. `src/log.mjs:append` + `events_no_edit` trigger.
-- **The Watcher is an observer.** It writes its own events and renders the briefing. It
-  forwards nothing, blocks nothing, and has no edge into dispatch. `src/briefing.mjs`.
-- **Regulated text never enters the ledger.** Citations to PDPA data carry a locator and a
-  redaction marker instead of a quote; the classifier is blind to the file's self-declared
-  header, so a mislabel is a finding rather than an instruction. `src/evidence.mjs`.
-- **Default deny.** Escalations that go unanswered are recorded as denied.
-  `src/approvals.mjs:sweepTimeouts`. Unknown actions are refused
-  (`gate.mjs:evaluate`), and regulated data is readable only when the owner named it
-  (`policy.mjs:readNeed`).
-
-## The idea this came from
-
-The engine is a re-pointing of **MIKA**, a Missing Institutional Knowledge Analyst:
-documents in → reconstructed process graph → findings with severity and cited evidence →
-owner-readable handbook. MIKA compared *what the documents say happened* against *what the
-process says should happen* and published every disagreement with its evidence.
-
-An oversight layer is the same shape with the inputs swapped: reference artifact = the
-approved playbook and policy; evidence = the documents the agent was given; actor = the
-agent. So the differentiator is inherited: **guardrail frameworks check the request. This
-re-verifies the record** — the output's numbers against the file the agent was actually
-holding.
-
-Two things MIKA never had to do, and this does: intercept **before** an action completes,
-and reason about **reads** as well as writes. S5 (quiet scope creep) is the scenario that
-exposes both — nothing is sent, and the violation is that the agent opened the owner's bank
-details and personal records while answering a print shop.
-
-## The two scenarios we wrote
-
-- **S6 — a helpful reply that names someone else's client.** Support tells Harbourbean
-  which other studios we've worked with, including Ferro's unpublished round. No invented
-  figure, no exfiltration, polite, and arguably what the owner asked for. Only a roster
-  knows those are different parties. Maps to R19.
-- **S7 — the label that says public.** A benchmark file filed `sensitivity: public` that
-  contains an identity number and a client's phone. A header-trusting layer uploads it.
-  This one refuses **on content** and records the disagreement before any action ran.
-
-## Honest edges
-
-- Rules are matched by deterministic predicates written per action type, not by a general
-  reasoner. Coverage is the 19 rules plus mined obligations; anything else defaults to deny.
-- Mined obligations are pattern-matched out of prose. Good on this corpus (10 found,
-  including the R17 deletion duty and its 24-hour clock); a differently-worded contract
-  will be missed, and a miss is silent unless the file names a client.
-- The external side is mocked: the "send", "upload" and "delete" calls go to in-repo fakes.
-  The gate's decisions are real; the SMTP conversation is not.
-- Ledger forgery is detected, not prevented, if someone holds the writer key and the whole
-  table — the attestation manifest exists so a second holder can spot it.
