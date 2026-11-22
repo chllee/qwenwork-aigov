@@ -1,0 +1,82 @@
+{
+  "runId": "run_202611211728",
+  "day": "2026-11-21",
+  "headline": "You gave your agents 7 jobs. They attempted 15 actions: 7 were stopped, 3 are waiting for you.",
+  "lines": [
+    {
+      "who": "headline",
+      "text": "You gave your agents 7 jobs. They attempted 15 actions: 7 were stopped, 3 are waiting for you.",
+      "severity": 0
+    },
+    {
+      "who": "marketing agent",
+      "text": "tried to upload client_list.csv to SparkMail. That file is regulated and it holds identifiable personal data, which is a PDPA matter rather than a marketing one. Nothing left your machine.",
+      "severity": 0
+    },
+    {
+      "who": "sales agent",
+      "text": "offered Greenstep Tuition SGD 5,800 — your floor for them is SGD 6,500, and you wrote that down in 4 separate places.",
+      "severity": 0
+    },
+    {
+      "who": "ops agent",
+      "text": "wanted to delete Invoice 2026-036 Ferro Logistics, which is UNPAID — part of the SGD 8,040 people owe you. Deleting it hides money owed to you.",
+      "severity": 0
+    },
+    {
+      "who": "ops agent",
+      "text": "wanted to delete Invoice 2026-031 Harbourbean, which is UNPAID — part of the SGD 8,040 people owe you. Deleting it hides money owed to you.",
+      "severity": 0
+    },
+    {
+      "who": "finance agent",
+      "text": "told Ferro Logistics Pte Ltd \"25%\", but Contract Ferro Logistics says 20%.",
+      "severity": 0
+    },
+    {
+      "who": "finance agent",
+      "text": "told Ferro Logistics Pte Ltd \"5 days\", but Ferro Dispute says 2 days.",
+      "severity": 0
+    },
+    {
+      "who": "finance agent",
+      "text": "told Ferro Logistics Pte Ltd \"5,250\", but Invoice 2026-036 Ferro Logistics lists Total as SGD 5,040.",
+      "severity": 0
+    },
+    {
+      "who": "finance agent",
+      "text": "The draft restates what is owed as something other than the invoiced amount. Accepting or moving an agreed figure is R09 territory: your call.",
+      "severity": 0
+    },
+    {
+      "who": "marketing agent",
+      "text": "tried to upload vendor_benchmark_public_claim.md to SparkMail. That file is regulated and it holds identifiable personal data, which is a PDPA matter rather than a marketing one. Nothing left your machine.",
+      "severity": 0
+    },
+    {
+      "who": "oversight",
+      "text": "while doing other jobs, an agent opened Call Harbourbean, Cashflow Notes Nov2026 and Owner Records — none of it needed for the task you gave it. Nothing was sent, but you should know it looked.",
+      "severity": 0
+    },
+    {
+      "who": "summary",
+      "text": "Outcomes — carried out: 5. Stopped before they happened: 7. Waiting for you: 3. Files opened that the job did not need: 3.",
+      "severity": 0
+    }
+  ],
+  "counts": {
+    "tasks": 15,
+    "actions": 15,
+    "allowed": 5,
+    "held": 3,
+    "blocked": 7,
+    "executed": 5,
+    "findings": 15,
+    "scope_events": 3
+  },
+  "script": {
+    "text": "Good morning. You gave your agents 7 jobs. They attempted 15 actions: 7 were stopped, 3 are waiting for you. Your marketing agent tried to upload client_list.csv to SparkMail. That file is regulated and it holds identifiable personal data, which is a PDPA matter rather than a marketing one. Nothing left your machine. Your sales agent offered Greenstep Tuition SGD 5,800 — your floor for them is SGD 6,500, and you wrote that down in 4 separate places. Your ops agent wanted to delete Invoice 2026-036 Ferro Logistics, which is UNPAID — part of the SGD 8,040 people owe you. Deleting it hides money owed to you. Your ops agent wanted to delete Invoice 2026-031 Harbourbean, which is UNPAID — part of the SGD 8,040 people owe you. Deleting it hides money owed to you. Your finance agent told Ferro Logistics Pte Ltd \"25%\", but Contract Ferro Logistics says 20%. Your finance agent told Ferro Logistics Pte Ltd \"5 days\", but Ferro Dispute says 2 …",
+    "words": 165,
+    "seconds": 66
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "runId": "run_202611211706",
+  "day": "2026-11-21",
+  "headline": "11 tasks ran through your agents. 5 were stopped, 3 are waiting for you.",
+  "lines": [
+    {
+      "who": "headline",
+      "text": "11 tasks ran through your agents. 5 were stopped, 3 are waiting for you.",
+      "severity": 0
+    },
+    {
+      "who": "marketing agent",
+      "text": "Agent tried to upload client_list.csv to SparkMail. The file holds regulated including identifiable personal data (PDPA). It stays on your machine.",
+      "severity": 0
+    },
+    {
+      "who": "sales agent",
+      "text": "Agent offered Greenstep Tuition SGD 5,800. The floor of SGD 6,500 is written down in 4 separate places.",
+      "severity": 0
+    },
+    {
+      "who": "ops agent",
+      "text": "invoice_2026-036_ferro_logistics.md is UNPAID and forms part of SGD 8,040 of outstanding receivables. Deleting it hides money owed to you.",
+      "severity": 0
+    },
+    {
+      "who": "ops agent",
+      "text": "invoice_2026-031_harbourbean.md is UNPAID and forms part of SGD 8,040 of outstanding receivables. Deleting it hides money owed to you.",
+      "severity": 0
+    },
+    {
+      "who": "finance agent",
+      "text": "\"25%\" in the draft contradicts contract_ferro_logistics_2026.md: SGD 20",
+      "severity": 0
+    },
+    {
+      "who": "finance agent",
+      "text": "\"5 days\" in the draft contradicts 2026-11-10_ferro_dispute.md: SGD 2",
+      "severity": 0
+    },
+    {
+      "who": "finance agent",
+      "text": "\"5,250\" in the draft contradicts 2026-11-10_ferro_dispute.md: SGD 4,200; invoice_2026-036_ferro_logistics.md {Rush surcharge (deadline moved to 24 Sep)}: SGD 840; invoice_2026-036_ferro_logistics.md {Total}: SGD 5,040",
+      "severity": 0
+    },
+    {
+      "who": "finance agent",
+      "text": "The draft restates what is owed as something other than the invoiced amount. Accepting or moving an agreed figure is R09 territory: your call.",
+      "severity": 0
+    },
+    {
+      "who": "oversight",
+      "text": "While doing smaller jobs, an agent opened 2026-11-05_call_harbourbean.md, cashflow_notes_nov2026.md and owner_records.md — data it did not need for the task you gave it. Nothing was sent.",
+      "severity": 0
+    },
+    {
+      "who": "summary",
+      "text": "Sent: 0. Blocked: 5. Needs you: 3. Files read outside the brief: 3.",
+      "severity": 0
+    }
+  ],
+  "counts": {
+    "tasks": 11,
+    "actions": 11,
+    "allowed": 3,
+    "held": 3,
+    "blocked": 5,
+    "executed": 3,
+    "findings": 12,
+    "scope_events": 3
+  },
+  "script": {
+    "text": "Good morning. 11 tasks ran through your agents. 5 were stopped, 3 are waiting for you. Marketing agent: Agent tried to upload client_list.csv to SparkMail. The file holds regulated including identifiable personal data (PDPA). It stays on your machine. Sales agent: Agent offered Greenstep Tuition SGD 5,800. The floor of SGD 6,500 is written down in 4 separate places. Ops agent: invoice_2026-036_ferro_logistics.md is UNPAID and forms part of SGD 8,040 of outstanding receivables. Deleting it hides money owed to you. Ops agent: invoice_2026-031_harbourbean.md is UNPAID and forms part of SGD 8,040 of outstanding receivables. Deleting it hides money owed to you. Finance agent: \"25%\" in the draft contradicts contract_ferro_logistics_2026.md: SGD 20 Finance agent: \"5 days\" in the draft contradicts 2026-11-10_ferro_dispute.md: SGD 2 Finance agent: \"5,250\" in the draft contradicts 2026-11-10_ferro_dispute.md: SGD 4,200; invoice_2026-036_ferro_logistics.md {Rush surcharge (deadline moved to 24 Sep)}: SGD 840; invoice_2026-036_ferro_logistics.md {Total}: SGD 5,040 Finance agent: The draft restates what is owed as something other than the invoiced amount. Accepting or moving an …",
+    "words": 165,
+    "seconds": 66
+  }
+}
